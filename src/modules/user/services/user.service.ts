@@ -10,9 +10,33 @@ export class UserService
 {
   constructor(private readonly userRepository: UserRepository) {}
 
-  create(dto: CreateUserDto): Promise<UserEntity> {
-    const user = this.userRepository.create(dto);
+  async create(dto: CreateUserDto): Promise<UserEntity> {
+    const user = await this.userRepository.create(dto);
 
     return user;
+  }
+
+  async findAll(): Promise<UserEntity[]> {
+    const data = await this.userRepository.findAll();
+
+    return data;
+  }
+
+  async findById(id: string): Promise<UserEntity> {
+    const user = await this.userRepository.findById(id);
+
+    return user;
+  }
+
+  async update(dto: UpdateUserDto): Promise<UserEntity> {
+    const update = await this.userRepository.update(dto);
+
+    return update;
+  }
+
+  async remove(id: string): Promise<UserEntity> {
+    const remove = await this.userRepository.delete(id);
+
+    return remove;
   }
 }
