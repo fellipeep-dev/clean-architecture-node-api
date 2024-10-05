@@ -14,5 +14,9 @@ model User {
   birthDate DateTime @map("birth_date") @db.Date
   password  String
 
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp()
+  updatedAt DateTime  @default(now()) @map("updated_at") @db.Timestamp()
+  deletedAt DateTime? @map("deleted_at") @db.Timestamp()
+
   @@map("users")
 }
