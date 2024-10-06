@@ -1,59 +1,90 @@
 import { Inject } from '@nestjs/common';
 import { PrismaService } from 'src/infra/database/prisma/prisma.service';
 
-export class RepositoryFactory<K, T = void, J = void> {
+export abstract class RepositoryFactory<E> {
   @Inject(PrismaService)
-  protected readonly prismaService: PrismaService;
+  public readonly prismaService: PrismaService;
 
   constructor(public model: string) {}
 
-  createMany(data: T[]) {
-    return this.prismaService[this.model].createMany({
-      data,
-      skipDuplicates: true,
-    });
-  }
-
-  create(data: T): Promise<K> {
-    return this.prismaService[this.model].create({
+  create<T>(createDto: T): Promise<E> {
+    return (this.prismaService as any)[this.model].create({
       data: {
-        ...data,
+        ...createDto,
+        deletedAt: null,
       },
     });
   }
 
-  upsert({ id, ...data }: T & { id?: string }): Promise<K> {
-    return this.prismaService[this.model].upsert({
-      create: { ...data },
-      update: { ...data },
-      where: { id },
+  createMany<T>(createDtos: T[]): Promise<E[]> {
+    const dto = createDtos.map((createDto) => ({
+      ...createDto,
+      deletedAt: null,
+    }));
+
+    return (this.prismaService as any)[this.model].createMany({
+      data: dto,
     });
   }
 
-  update({ id, ...data }: J & { id: string }): Promise<K | null> {
-    return this.prismaService[this.model].update({
+  findById(id: string): Promise<E> {
+    return (this.prismaService as any)[this.model].findFirst({
+      where: {
+        id,
+        deletedAt: null,
+      },
+    });
+  }
+
+  findManyWithIds(ids: string[]): Promise<E[]> {
+    return (this.prismaService as any)[this.model].findMany({
+      where: {
+        id: {
+          in: ids,
+        },
+      },
+    });
+  }
+
+  findAll(): Promise<E[]> {
+    return (this.prismaService as any)[this.model].findMany({
+      where: {
+        deletedAt: null,
+      },
+    });
+  }
+
+  update<T>(updateDto: T): Promise<E> {
+    const { id, ...updateInput } = updateDto as any;
+
+    return (this.prismaService as any)[this.model].update({
       where: {
         id,
       },
       data: {
-        ...data,
+        ...updateInput,
+        updatedAt: new Date(),
       },
     });
   }
 
-  count(where: any): Promise<number> {
-    return this.prismaService[this.model].count({ where });
+  softDelete(id: string): Promise<E> {
+    return (this.prismaService as any)[this.model].update({
+      where: {
+        id,
+      },
+      data: {
+        deletedAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
   }
 
-  delete(id: string): Promise<K | null> {
-    return this.prismaService[this.model].delete({
+  delete(id: string): Promise<E> {
+    return (this.prismaService as any)[this.model].delete({
       where: {
         id,
       },
     });
-  }
-
-  deleteMany() {
-    return this.prismaService[this.model].deleteMany();
   }
 }
