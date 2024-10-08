@@ -1,19 +1,37 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { UserCreateUseCase } from './user-create.use-case';
-import { PrismaService } from 'src/infra/database/prisma/prisma.service';
-import { userModuleMock } from '../../user.module';
+import { IBaseUseCase } from 'src/common';
+import { CreateUserDto } from 'src/domain/dtos';
+import { UserEntity } from 'src/domain/entities';
+
+interface InMemoryRepository {
+  create(data: CreateUserDto): Promise<UserEntity>;
+}
+
+class InMemoryRepositoryMock implements InMemoryRepository {
+  dataBase = [];
+
+  async create(data: CreateUserDto): Promise<UserEntity> {
+    this.dataBase.push(data);
+
+    return this.dataBase[0];
+  }
+}
+
+export class TestUserCreateUseCase
+  implements IBaseUseCase<UserEntity, CreateUserDto>
+{
+  constructor(private readonly inMemoryRepository: InMemoryRepository) {}
+
+  async execute(data: CreateUserDto): Promise<UserEntity> {
+    return this.inMemoryRepository.create(data);
+  }
+}
 
 describe('UserCreateUseCase', () => {
-  let sut: UserCreateUseCase;
-  let moduleRef: TestingModule;
-  let prismaService: PrismaService;
+  let sut: TestUserCreateUseCase;
 
   beforeEach(async () => {
-    moduleRef = await Test.createTestingModule(userModuleMock).compile();
-
-    prismaService = moduleRef.get<PrismaService>(PrismaService);
-
-    sut = moduleRef.get<UserCreateUseCase>(UserCreateUseCase);
+    let inMemoryRepositoryMock = new InMemoryRepositoryMock();
+    sut = new TestUserCreateUseCase(inMemoryRepositoryMock);
   });
 
   it('should be defined', () => {
