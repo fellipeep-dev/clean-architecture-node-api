@@ -8,11 +8,10 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  name      String
-  email     String   @unique
-  birthDate DateTime @map("birth_date") @db.Date
-  password  String
+  id       String @id @default(uuid())
+  name     String
+  email    String @unique
+  password String
 
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp()
   updatedAt DateTime  @default(now()) @map("updated_at") @db.Timestamp()

@@ -1,2 +1,2 @@
-export * from './base'
-export * from './factories'
+export * from './base';
+export * from './factories';

@@ -11,8 +11,6 @@ export class UserCreateUseCase
   constructor(private readonly userRepository: IUserRepository) {}
 
   async execute(data: CreateUserDto): Promise<UserEntity> {
-    data.birthDate = new Date(data.birthDate);
-
     const user = await this.userRepository.create({
       ...data,
     });
